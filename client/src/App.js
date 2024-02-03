@@ -1,13 +1,27 @@
 import './App.css';
+import React from "react";
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route,
+} from "react-router-dom";
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import Redirect from './pages/Redirect';
+
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <button> <a href="http://localhost:4000/login">Login with Spotify</a></button>
-      </header>
-    </div>
-  );
+
+	return (
+        <Router>
+            <Routes>
+				<Route path="/" element={<Redirect />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/home" element={<Home />} />
+            </Routes>
+        </Router>
+    );
+
 }
 
 export default App;
