@@ -3,17 +3,19 @@
 const exp = require('constants');
 const express = require('express');
 const querystring = require('querystring');
+const cors = require('cors');
 const url = require('url');
-const session = require('express-session');
+//const session = require('express-session');
 
 var client_id = '943afc88e39a4895bf2561c63d4fd5d6';
 var redirect_uri = 'http://localhost:4000/callback';
 //make access_token refresh_token and expires_date session variables
-var access_token;
-var refresh_token;
-var expires_date=0;
 
 var app = express();
+
+app.use(cors({
+    origin: 'http://localhost:3000'
+}));
 
 var generateRandomString = function (length) {
     var text = '';
@@ -26,38 +28,28 @@ var generateRandomString = function (length) {
     return text;
 };
 
-function getAccessToken() {
-    if(expires_date < Date.now()) {
-        refreshToken();
-    }
-    console.log(access_token+" sono l'access token");
-    return access_token;
-}
-
-app.get('/token', function (req, res) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.send({access_token: getAccessToken()});
-});
-
-
-async function refreshToken(){
-    const data = await fetch('https://accounts.spotify.com/api/token', {
+app.get('/refreshToken', function (req, res) {
+    const data = fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: {
             'content-type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + (new Buffer.from(client_id + ':' + process.env.SPOTIFY_SECRET).toString('base64'))
+            'Authorization': 'Basic ' + (new Buffer.from(client_id + ':' + process.env.SPOTIFY_SECRET).toString('base64')),
+            'Access-Control-Allow-Origin': '*'
         },
         body: querystring.stringify({
             grant_type: 'refresh_token',
-            refresh_token: refresh_token,
+            refresh_token: req.query.refresh_token,
             client_id: client_id
-        })
+        }
+    )}).then(response => {
+        return response.json();
+    }).then(data => {
+        console.log(data);
+        res.send(data);
+    }).catch(error => {
+        console.log(error);
     });
-    access_token = data.access_token;
-    refresh_token = data.refresh_token;
-    expires_date = data.expires_in + Date.now();
-
-};
+});
 
 app.get('/login', function (req, res) {
 
@@ -103,7 +95,7 @@ app.get('/callback', function (req, res) {
             var refresh_token = data.refresh_token;
             var expires_in = data.expires_in;
 
-            res.redirect('/save?' +
+            res.redirect('http://localhost:3000/home?' +
                 querystring.stringify({
                     access_token: access_token,
                     refresh_token: refresh_token,
@@ -113,16 +105,6 @@ app.get('/callback', function (req, res) {
             console.log(error);
         });
     }
-});
-
-app.get('/save', function (req, res) {
-    access_token = req.query.access_token;
-    refresh_token = req.query.refresh_token;
-    expires_date = req.query.expires_in + Date.now();
-    console.log(access_token);
-    console.log(refresh_token);
-    console.log(expires_date);
-    res.redirect("http://localhost:3000/home");
 });
 
 app.get('/me', function (req, res) {

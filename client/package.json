@@ -39,6 +39,9 @@
     ]
   },
   "devDependencies": {
-    "express-session": "^1.18.0"
+    "express-session": "^1.18.0",
+    "query-string": "^8.2.0",
+    "querystring-es3": "^0.2.1",
+    "react-client-session": "^0.0.8"
   }
 }
